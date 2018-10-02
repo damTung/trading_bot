@@ -5,8 +5,12 @@ class BotManager {
         this._bots = {}
     }
 
-    addBot (email, password) {
-        var bot = new Bot(email, password)
+    addBot (email, password, botId) {
+        var self = this
+        var bot = new Bot(email, password, botId)
+        
+        self._bots[email] = bot
+        console.log(`Add bot ${botId}`)
         bot._startBot(email, password)
     }
     

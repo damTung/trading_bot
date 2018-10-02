@@ -10,7 +10,9 @@ var config = {
 }
 
 class Bot {
-    constructor (email, password) {
+    constructor (email, password, botId) {
+        // this.manager = manager
+        this.botId = botId
         this.email = email
         this.password = password
         this.access_token = null
@@ -33,7 +35,7 @@ class Bot {
             'dash': 0.01,
             'etc': 0.1,
             'eth': 0.1,
-            'knc': 0.1,
+            'knc': 1,
             'ltc': 0.1,
             'neo': 0.01,
             'tomo': 0.01,
@@ -56,7 +58,7 @@ class Bot {
             this.token_type = data.data.token_type
             config.headers.Authorization = this.token_type + " " + this.access_token
             // console.log(data.data)
-            console.log("Logged in")
+            console.log(`Bot ${this.botId} Login`)
         })      
     }
 
@@ -70,9 +72,10 @@ class Bot {
         .catch(err => console.log)
     }
 
-    _getDataBinance(pair) {
+    _getDataBinance(pair) { 
         axios.get(`https://api.binance.com/api/v3/ticker/bookTicker?symbol=${pair}`)
-        .then(data => {               
+        .then(data => {          
+            console.log(`Bot ${this.botId} get data from binance`)     
             console.log(data.data)  
             this.priceBuy = data.data.bidPrice
             this.priceSell = data.data.askPrice
@@ -92,7 +95,6 @@ class Bot {
             this.temps = Math.floor(1 + Math.random() * (100 - 1))
             this.base = 100000 + Math.random() * (200000 - 100000)
             this.base = Math.round(this.base)
-           console.log("quantity: " + this.quantity)
         setTimeout(() => {
             this.quantity = this.calulateQuantity(this.temps, this.coins[this.random])
         },400)
@@ -101,21 +103,15 @@ class Bot {
 
     calulateQuantity(amount, coin) {
         var temp = coin.split('-')
-        console.log("coin: " + temp[0])
         var minQuantity = this.minQuantities[temp[0]];
-        // // var minQuantity = 0.01
-        // console.log(this.minQuantities)
-        console.log('min quantity: ' + minQuantity)
         var quantity = amount;
         if (quantity > 200 * minQuantity) {
-          quantity = quantity / 20;
+          quantity = quantity / 15;
         }
         if (coin == 'xrp') {
           quantity = Math.random() * 10
         }
         quantity = Math.round(quantity / minQuantity) * minQuantity;
-        console.log('here')
-        console.log(Math.max(quantity, minQuantity))
         return Math.max(quantity, minQuantity);
       }
 
@@ -126,6 +122,7 @@ class Bot {
         }
 
         setTimeout(() => {
+            console.log(`Bot ${this.botId} start`)
             setTimeout(() => {
                 // console.log("here" + this.random)
                 var temp = this.coins[this.random]
@@ -145,21 +142,22 @@ class Bot {
         }, 4000)
 
         setTimeout(() => {
-            // if(this.execute){
-            //     if (this.randFunction <= 1){
-            //         this.allFunction[this.randFunction](this.coins[this.random], this.quantity, this.priceBuy, this.priceSell) // buy sell limit
-            //     }
-            //     if (this.randFunction > 1 && this.randFunction <= 3) {
-            //         this.allFunction[this.randFunction](this.coins[this.random], this.quantity) // buy sell market
-            //     }
-            //     if (this.randFunction > 3 && this.randFunction <= 5) {
-            //         this.allFunction[this.randFunction](this.coins[this.random], this.base, this.quantity, this.priceBuy, this.priceSell) // buy sell stop limit
-            //     }        
-            //     if (this.randFunction > 5 && this.randFunction <= 7) {
-            //         this.allFunction[this.randFunction](this.coins[this.random], this.base, this.quantity) // buy sell stop market
-            //     }  
-            // }
+            if(this.execute){
+                if (this.randFunction <= 1){
+                    this.allFunction[this.randFunction](this.coins[this.random], this.quantity, this.priceBuy, this.priceSell) // buy sell limit
+                }
+                if (this.randFunction > 1 && this.randFunction <= 3) {
+                    this.allFunction[this.randFunction](this.coins[this.random], this.quantity) // buy sell market
+                }
+                if (this.randFunction > 3 && this.randFunction <= 5) {
+                    this.allFunction[this.randFunction](this.coins[this.random], this.base, this.quantity, this.priceBuy, this.priceSell) // buy sell stop limit
+                }        
+                if (this.randFunction > 5 && this.randFunction <= 7) {
+                    this.allFunction[this.randFunction](this.coins[this.random], this.base, this.quantity) // buy sell stop market
+                }  
+            }
             
+            // console.log(`Bot ${this.botId} end`)
             this._startBot()
         },10000)
     } 
@@ -168,6 +166,7 @@ class Bot {
 //----------------------------------------------------------------------------------------------------------------
 
     buyLimit(pairs, quantity, priceBuy, priceSell){
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "coin":	pair[0],
@@ -177,12 +176,15 @@ class Bot {
             "trade_type": "buy",
             "type": "limit"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 
     sellLimit(pairs, quantity, priceBuy, priceSell){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "coin":	pair[0],
@@ -192,12 +194,15 @@ class Bot {
             "trade_type": "sell",
             "type": "limit"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 //----------------------------------------------------------------------------------------------------------------
     buyMarket(pairs, quantity){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "coin": pair[0],
@@ -206,12 +211,15 @@ class Bot {
             "trade_type": "buy",
             "type": "market"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 
     sellMarket(pairs, quantity){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "coin": pair[0],
@@ -220,13 +228,16 @@ class Bot {
             "trade_type": "sell",
             "type": "market"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 //----------------------------------------------------------------------------------------------------------------
 
     buyStopLimit(pairs, base_price, quantity, priceBuy, priceSell){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "base_price": base_price,
@@ -238,12 +249,15 @@ class Bot {
             "trade_type": "buy",
             "type": "stop_limit"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 
     sellStopLimit(pairs, base_price, quantity, priceBuy, priceSell){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "base_price": base_price,
@@ -255,13 +269,16 @@ class Bot {
             "trade_type": "sell",
             "type": "stop_limit"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 //---------------------------------------------------------------------------------------------------------------- 
 
     buyStopMaket(pairs, base_price, quantity){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "base_price": base_price,
@@ -272,12 +289,15 @@ class Bot {
             "trade_type": "buy",
             "type": "stop_market"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 
     sellStopMaket(pairs, base_price, quantity){
-        // console.log(config)
+        console.log(config)
         var pair = pairs.split('-')
         axios.post("http://xchainos.com/api/v1/orders", {
             "base_price": base_price,
@@ -288,7 +308,10 @@ class Bot {
             "trade_type": "sell",
             "type": "stop_market"
         }, config)
-        .then(data => console.log(data.data))
+        .then(data => {
+            console.log(`Bot ${this.botId} end here`)
+            console.log(data.data)
+        })
         .catch(err => console.log(err))
     }
 }
